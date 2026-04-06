@@ -1387,6 +1387,74 @@ axi_uart_controller u_axi_uart_controller (
 
 );
 
+// ----------------------------
+// Confreg 实例化
+// ----------------------------
+confreg #(
+    .SIMULATION       (1'b1)          // 仿真模式 = 1
+) u_confreg (
+    .aclk        (sys_clk),       // CPU 时钟
+    .aresetn     (sys_resetn),    // CPU 复位，低有效
+    .cpu_clk     (cpu_clk),       // 可选，内部使用 CPU 时钟
+    .cpu_resetn  (cpu_resetn),    // 可选，内部复位
+
+    // AXI 写地址通道
+    .s_awid      (confreg_awid),
+    .s_awaddr    (confreg_awaddr),
+    .s_awlen     (confreg_awlen),
+    .s_awsize    (confreg_awsize),
+    .s_awburst   (confreg_awburst),
+    .s_awlock    (confreg_awlock),
+    .s_awcache   (confreg_awcache),
+    .s_awprot    (confreg_awprot),
+    .s_awvalid   (confreg_awvalid),
+    .s_awready   (confreg_awready),
+
+    // AXI 写数据通道
+    .s_wid       (confreg_wid),
+    .s_wdata     (confreg_wdata),
+    .s_wstrb     (confreg_wstrb),
+    .s_wlast     (confreg_wlast),
+    .s_wvalid    (confreg_wvalid),
+    .s_wready    (confreg_wready),
+
+    // AXI 写响应通道
+    .s_bid       (confreg_bid),
+    .s_bresp     (confreg_bresp),
+    .s_bvalid    (confreg_bvalid),
+    .s_bready    (confreg_bready),
+
+    // AXI 读地址通道
+    .s_arid      (confreg_arid),
+    .s_araddr    (confreg_araddr),
+    .s_arlen     (confreg_arlen),
+    .s_arsize    (confreg_arsize),
+    .s_arburst   (confreg_arburst),
+    .s_arlock    (confreg_arlock),
+    .s_arcache   (confreg_arcache),
+    .s_arprot    (confreg_arprot),
+    .s_arvalid   (confreg_arvalid),
+    .s_arready   (confreg_arready),
+
+    // AXI 读数据通道
+    .s_rid       (confreg_rid),
+    .s_rdata     (confreg_rdata),
+    .s_rresp     (confreg_rresp),
+    .s_rlast     (confreg_rlast),
+    .s_rvalid    (confreg_rvalid),
+    .s_rready    (confreg_rready),
+
+    // 外设接口（可根据实际板子连接）
+    .led              (),
+    .dpy0             (),
+    .dpy1             (),
+    .switch           (32'd0),
+    .touch_btn        (4'd0),
+    .dma_finish       (1'b0),
+    .fft_finish       (1'b0),
+    .confreg_int      ()
+);
+
 
 endmodule
 
