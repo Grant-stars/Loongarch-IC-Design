@@ -1105,5 +1105,158 @@ AxiCrossbar_2x8  u_AxiCrossbar_2x8 (
 
 // add your code
 
+//OpenLA500 CPU core
+// ==============================
+core_top u_cpu(
+    .intrpt    (8'h0        ),  // 实验一不用中断，直接给0
+    .aclk      (cpu_clk     ),  // CPU时钟：33MHz
+    .aresetn   (cpu_resetn  ),  // CPU复位：低有效
+
+    // AXI 读地址通道
+    .arid      (cpu_arid    ),
+    .araddr    (cpu_araddr  ),
+    .arlen     (cpu_arlen   ),
+    .arsize    (cpu_arsize  ),
+    .arburst   (cpu_arburst ),
+    .arlock    (cpu_arlock  ),
+    .arcache   (cpu_arcache ),
+    .arprot    (cpu_arprot  ),
+    .arvalid   (cpu_arvalid ),
+    .arready   (cpu_arready ),
+
+    // AXI 读数据通道
+    .rid       (cpu_rid     ),
+    .rdata     (cpu_rdata   ),
+    .rresp     (cpu_rresp   ),
+    .rlast     (cpu_rlast    ),
+    .rvalid    (cpu_rvalid  ),
+    .rready    (cpu_rready  ),
+
+    // AXI 写地址通道
+    .awid      (cpu_awid    ),
+    .awaddr    (cpu_awaddr  ),
+    .awlen     (cpu_awlen   ),
+    .awsize    (cpu_awsize  ),
+    .awburst   (cpu_awburst ),
+    .awlock    (cpu_awlock  ),
+    .awcache   (cpu_awcache ),
+    .awprot    (cpu_awprot  ),
+    .awvalid   (cpu_awvalid ),
+    .awready   (cpu_awready ),
+
+    // AXI 写数据通道
+    .wid       (cpu_wid     ),
+    .wdata     (cpu_wdata   ),
+    .wstrb     (cpu_wstrb   ),
+    .wlast     (cpu_wlast   ),
+    .wvalid    (cpu_wvalid  ),
+    .wready    (cpu_wready  ),
+
+    // AXI 写响应通道
+    .bid       (cpu_bid     ),
+    .bresp     (cpu_bresp   ),
+    .bvalid    (cpu_bvalid  ),
+    .bready    (cpu_bready  ),
+
+    // debug 暂时不用
+    .break_point (1'b0),
+    .infor_flag  (1'b0),
+    .reg_num     (5'b0),
+    .ws_valid    (),
+    .rf_rdata    (),
+    .debug0_wb_pc      (debug_wb_pc),
+    .debug0_wb_rf_wen  (debug_wb_rf_wen),
+    .debug0_wb_inst    (debug_wb_inst),
+    .debug0_wb_rf_wnum (debug_wb_rf_wnum),
+    .debug0_wb_rf_wdata(debug_wb_rf_wdata)
+);
+
+//clock sync: from CPU to AXI_Crossbar
+// 33MHz(CPU) to 50MHz(System)
+// ==============================
+
+Axi_CDC u_Axi_CDC (
+    .axiInClk     ( cpu_clk        ),
+    .axiInRstn    ( cpu_resetn     ),
+    .axiOutClk    ( sys_clk        ),
+    .axiOutRstn   ( sys_resetn     ),
+
+    .axiIn_awvalid    ( cpu_awvalid          ),
+    .axiIn_awaddr     ( cpu_awaddr           ),
+    .axiIn_awid       ( {1'b0,cpu_awid}      ),
+    .axiIn_awlen      ( cpu_awlen            ),
+    .axiIn_awsize     ( cpu_awsize           ),
+    .axiIn_awburst    ( cpu_awburst          ),
+    .axiIn_awlock     ( cpu_awlock[0]        ),
+    .axiIn_awcache    ( cpu_awcache          ),
+    .axiIn_awprot     ( cpu_awprot           ),
+
+    .axiIn_wvalid     ( cpu_wvalid           ),
+    .axiIn_wdata      ( cpu_wdata            ),
+    .axiIn_wstrb      ( cpu_wstrb            ),
+    .axiIn_wlast      ( cpu_wlast            ),
+    .axiIn_bready     ( cpu_bready           ),
+
+    .axiIn_arvalid    ( cpu_arvalid          ),
+    .axiIn_araddr     ( cpu_araddr           ),
+    .axiIn_arid       ( {1'b0,cpu_arid}      ),
+    .axiIn_arlen      ( cpu_arlen            ),
+    .axiIn_arsize     ( cpu_arsize           ),
+    .axiIn_arburst    ( cpu_arburst          ),
+    .axiIn_arlock     ( cpu_arlock[0]        ),
+    .axiIn_arcache    ( cpu_arcache          ),
+    .axiIn_arprot     ( cpu_arprot           ),
+    .axiIn_rready     ( cpu_rready           ),
+    .axiOut_awready    ( cpu_sync_awready     ),
+    .axiOut_wready     ( cpu_sync_wready      ),
+    .axiOut_bvalid     ( cpu_sync_bvalid      ),
+    .axiOut_bid        ( {1'b0,cpu_sync_bid}  ),
+    .axiOut_bresp      ( cpu_sync_bresp       ),
+    .axiOut_arready    ( cpu_sync_arready     ),
+    .axiOut_rvalid     ( cpu_sync_rvalid      ),
+    .axiOut_rdata      ( cpu_sync_rdata       ),
+    .axiOut_rid        ( {1'b0,cpu_sync_rid}  ),
+    .axiOut_rresp      ( cpu_sync_rresp       ),
+    .axiOut_rlast      ( cpu_sync_rlast       ),
+
+    .axiIn_awready     (cpu_awready           ),
+    .axiIn_wready      (cpu_wready            ),
+    .axiIn_bvalid      (cpu_bvalid            ),
+    .axiIn_bid         ({cpu_bid_4,cpu_bid}   ),
+    .axiIn_bresp       (cpu_bresp             ),
+    .axiIn_arready     (cpu_arready           ),
+    .axiIn_rvalid      (cpu_rvalid            ),
+    .axiIn_rdata       (cpu_rdata             ),
+    .axiIn_rid         ({cpu_rid_4,cpu_rid}   ),
+    .axiIn_rresp       (cpu_rresp             ),
+    .axiIn_rlast       (cpu_rlast             ),
+    .axiOut_awvalid    (cpu_sync_awvalid      ),
+    .axiOut_awaddr     (cpu_sync_awaddr       ),
+    .axiOut_awid       ({cpu_sync_awid_4,cpu_sync_awid} ),
+
+    .axiOut_awlen      (cpu_sync_awlen       ),
+    .axiOut_awsize     (cpu_sync_awsize      ),
+    .axiOut_awburst    (cpu_sync_awburst     ),
+    .axiOut_awlock     (cpu_sync_awlock      ),
+    .axiOut_awcache    (cpu_sync_awcache     ),
+    .axiOut_awprot     (cpu_sync_awprot      ),
+    .axiOut_wvalid     (cpu_sync_wvalid      ),
+    .axiOut_wdata      (cpu_sync_wdata       ),
+    .axiOut_wstrb      (cpu_sync_wstrb       ),
+    .axiOut_wlast      (cpu_sync_wlast       ),
+    .axiOut_bready     (cpu_sync_bready      ),
+    .axiOut_arvalid    (cpu_sync_arvalid     ),
+    .axiOut_araddr     (cpu_sync_araddr      ),
+    .axiOut_arid       ({cpu_sync_arid_4,cpu_sync_arid} ),
+
+    .axiOut_arlen      (cpu_sync_arlen       ),
+    .axiOut_arsize     (cpu_sync_arsize      ),
+    .axiOut_arburst    (cpu_sync_arburst     ),
+    .axiOut_arlock     (cpu_sync_arlock      ),
+    .axiOut_arcache    (cpu_sync_arcache     ),
+    .axiOut_arprot     (cpu_sync_arprot      ),
+    .axiOut_rready     (cpu_sync_rready      )
+
+);
 endmodule
 
