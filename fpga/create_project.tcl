@@ -7,6 +7,11 @@ file delete -force $project_path
 
 create_project -force $project_name $project_path -part $project_part
 
+# 自动删除 PLL 文件
+exec find ../rtl/ip/ -name "clk_pll_sim_netlist.*" -delete
+exec find ../rtl/ip/ -name "clk_pll_stub.*" -delete
+exec find ../rtl/ip/ -name "*.dcp" -delete
+
 # Add conventional sources
 add_files -scan_for_includes ../rtl
 
