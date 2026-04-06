@@ -3,3 +3,4 @@ doc/
 picolibc/
 newlib/
 loongson-gnu-toolchain-8.3-x86_64-loongarch32r-linux-gnusf-v2.0/
+fpga/project/

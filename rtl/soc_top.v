@@ -1106,7 +1106,6 @@ AxiCrossbar_2x8  u_AxiCrossbar_2x8 (
 // add your code
 
 //OpenLA500 CPU core
-// ==============================
 core_top u_cpu(
     .intrpt    (8'h0        ),  // 实验一不用中断，直接给0
     .aclk      (cpu_clk     ),  // CPU时钟：33MHz
@@ -1173,8 +1172,6 @@ core_top u_cpu(
 
 //clock sync: from CPU to AXI_Crossbar
 // 33MHz(CPU) to 50MHz(System)
-// ==============================
-
 Axi_CDC u_Axi_CDC (
     .axiInClk     ( cpu_clk        ),
     .axiInRstn    ( cpu_resetn     ),
@@ -1256,7 +1253,141 @@ Axi_CDC u_Axi_CDC (
     .axiOut_arcache    (cpu_sync_arcache     ),
     .axiOut_arprot     (cpu_sync_arprot      ),
     .axiOut_rready     (cpu_sync_rready      )
+);
+
+//axi ram
+axi_wrap_ram_sp_ext u_axi_ram (
+    .aclk              ( sys_clk       ),
+    .aresetn           ( sys_resetn    ),
+    //ar
+    .axi_arid          ( ram_arid      ),
+    .axi_araddr        ( ram_araddr     ),
+    .axi_arlen         ( ram_arlen      ),
+    .axi_arsize        ( ram_arsize     ),
+    .axi_arburst       ( ram_arburst    ),
+    .axi_arlock        ( ram_arlock     ),
+    .axi_arcache       ( ram_arcache    ),
+    .axi_arprot        ( ram_arprot     ),
+    .axi_arvalid       ( ram_arvalid    ),
+    .axi_arready       ( ram_arready    ),
+    //r
+    .axi_rid           ( ram_rid       ),
+    .axi_rdata         ( ram_rdata     ),
+    .axi_rresp         ( ram_rresp      ),
+    .axi_rlast         ( ram_rlast      ),
+    .axi_rvalid        ( ram_rvalid     ),
+    .axi_rready        ( ram_rready     ),
+    //aw
+    .axi_awid          ( ram_awid      ),
+    .axi_awaddr        ( ram_awaddr    ),
+    .axi_awlen         ( ram_awlen     ),
+    .axi_awsize        ( ram_awsize    ),
+    .axi_awburst       ( ram_awburst   ),
+    .axi_awlock        ( ram_awlock    ),
+    .axi_awcache       ( ram_awcache   ),
+    .axi_awprot        ( ram_awprot    ),
+    .axi_awvalid       ( ram_awvalid   ),
+    .axi_awready       ( ram_awready   ),
+    //w
+    .axi_wdata         ( ram_wdata     ),
+    .axi_wstrb         ( ram_wstrb     ),
+    .axi_wlast         ( ram_wlast     ),
+    .axi_wvalid        ( ram_wvalid    ),
+    .axi_wready        ( ram_wready    ),
+    //b
+    .axi_bid           ( ram_bid       ),
+    .axi_bresp         ( ram_bresp     ),
+    .axi_bvalid        ( ram_bvalid    ),
+    .axi_bready        ( ram_bready    ),
+
+    .base_ram_addr     ( base_ram_addr ),
+    .base_ram_be_n     ( base_ram_be_n ),
+    .base_ram_ce_n     ( base_ram_ce_n ),
+    .base_ram_oe_n     ( base_ram_oe_n ),
+    .base_ram_we_n     ( base_ram_we_n ),
+    .ext_ram_addr      ( ext_ram_addr  ),
+    .ext_ram_be_n      ( ext_ram_be_n  ),
+    .ext_ram_ce_n      ( ext_ram_ce_n  ),
+    .ext_ram_oe_n      ( ext_ram_oe_n  ),
+    .ext_ram_we_n      ( ext_ram_we_n  ),
+
+    .base_ram_data     ( base_ram_data ),
+    .ext_ram_data      ( ext_ram_data  )
+);
+
+//AXI2APB
+axi_uart_controller u_axi_uart_controller (
+    .clk               ( sys_clk       ),
+    .rst_n             ( sys_resetn    ),
+
+    .axi_s_awid        ( uart_awid     ),
+    .axi_s_awaddr      ( uart_awaddr   ),
+    .axi_s_awlen       ( uart_awlen    ),
+    .axi_s_awsize      ( uart_awsize   ),
+    .axi_s_awburst     ( uart_awburst  ),
+    .axi_s_awlock      ( uart_awlock   ),
+    .axi_s_awcache     ( uart_awcache  ),
+    .axi_s_awprot      ( uart_awprot   ),
+    .axi_s_awvalid     ( uart_awvalid  ),
+    .axi_s_awready     ( uart_awready  ),
+    .axi_s_wid         ( uart_awid     ),
+    .axi_s_wdata       ( uart_wdata    ),
+    .axi_s_wstrb       ( uart_wstrb    ),
+    .axi_s_wlast       ( uart_wlast    ),
+    .axi_s_wvalid      ( uart_wvalid   ),
+    .axi_s_wready      ( uart_wready   ),
+    .axi_s_bid         ( uart_bid      ),
+    .axi_s_bresp       ( uart_bresp    ),
+    .axi_s_bvalid      ( uart_bvalid   ),
+    .axi_s_bready      ( uart_bready   ),
+    .axi_s_arid        ( uart_arid     ),
+    .axi_s_araddr      ( uart_araddr   ),
+    .axi_s_arlen       ( uart_arlen    ),
+    .axi_s_arsize      ( uart_arsize   ),
+    .axi_s_arburst     ( uart_arburst  ),
+    .axi_s_arlock      ( uart_arlock   ),
+    .axi_s_arcache     ( uart_arcache  ),
+    .axi_s_arprot      ( uart_arprot   ),
+    .axi_s_arvalid     ( uart_arvalid  ),
+    .axi_s_arready     ( uart_arready  ),
+    .axi_s_rid         ( uart_rid      ),
+    .axi_s_rdata       ( uart_rdata    ),
+    .axi_s_rresp       ( uart_rresp    ),
+    .axi_s_rlast       ( uart_rlast    ),
+    .axi_s_rvalid      ( uart_rvalid   ),
+    .axi_s_rready      ( uart_rready   ),
+
+    .apb_rw_dma        ( 1'b0          ),
+    .apb_psel_dma      ( 1'b0          ),
+    .apb_enab_dma      ( 1'b0          ),
+    .apb_addr_dma      ( 20'b0         ),
+    .apb_valid_dma     ( 1'b0          ),
+    .apb_wdata_dma     ( 32'b0         ),
+    .apb_rdata_dma     (               ),
+    .apb_ready_dma     (               ),
+    .dma_grant         (               ),
+
+    .dma_req_o         (               ),
+    .dma_ack_i         ( 1'b0          ),
+
+    //UART0
+    .uart0_txd_i       ( uart0_txd_i   ),
+    .uart0_txd_o       ( uart0_txd_o   ),
+    .uart0_txd_oe      ( uart0_txd_oe  ),
+    .uart0_rxd_i       ( uart0_rxd_i   ),
+    .uart0_rxd_o       ( uart0_rxd_o   ),
+    .uart0_rxd_oe      ( uart0_rxd_oe  ),
+    .uart0_rts_o       ( uart0_rts_o   ),
+    .uart0_dtr_o       ( uart0_dtr_o   ),
+    .uart0_cts_i       ( uart0_cts_i   ),
+    .uart0_dsr_i       ( uart0_dsr_i   ),
+    .uart0_dcd_i       ( uart0_dcd_i   ),
+    .uart0_ri_i        ( uart0_ri_i    ),
+    .uart0_int         ( uart0_int     )
 
 );
+
+
 endmodule
+
 
