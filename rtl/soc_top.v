@@ -1256,7 +1256,7 @@ Axi_CDC u_Axi_CDC (
 );
 
 //axi ram
-axi_wrap_ram_sp_ext u_axi_ram (
+axi_wrap_ram_sp_external u_axi_ram (
     .aclk              ( sys_clk       ),
     .aresetn           ( sys_resetn    ),
     //ar
