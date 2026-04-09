@@ -1391,7 +1391,7 @@ axi_uart_controller u_axi_uart_controller (
 // Confreg 实例化
 // ----------------------------
 confreg #(
-    .SIMULATION       (1'b1)          // 仿真模式 = 1
+    .SIMULATION       (1'b0)          // 仿真模式 = 1
 ) u_confreg (
     .aclk        (sys_clk),       // CPU 时钟
     .aresetn     (sys_resetn),    // CPU 复位，低有效

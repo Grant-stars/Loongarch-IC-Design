@@ -7,10 +7,16 @@ file delete -force $project_path
 
 create_project -force $project_name $project_path -part $project_part
 
-# 自动删除 PLL 文件
-exec find ../rtl/ip/ -name "clk_pll_sim_netlist.*" -delete
-exec find ../rtl/ip/ -name "clk_pll_stub.*" -delete
-exec find ../rtl/ip/ -name "*.dcp" -delete
+# 自动删除 PLL 文件（Windows 专用）
+# 使用 PowerShell 递归删除仿真网表与 .dcp，适用于在 Windows 环境下运行 Vivado 的情况。
+set ipdir [file normalize ../rtl/ip]
+if {[file isdirectory $ipdir]} {
+	if {[catch {
+		exec powershell -NoProfile -Command "Get-ChildItem -Path '$ipdir' -Recurse -Include 'clk_pll_sim_netlist.*','clk_pll_stub.*','*.dcp' | Remove-Item -Force -ErrorAction SilentlyContinue"
+	} _err]} {
+		puts stderr "Warning: 清理 PLL 生成文件时出错，继续执行：$_err"
+	}
+}
 
 # Add conventional sources
 add_files -scan_for_includes ../rtl
