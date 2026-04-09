@@ -8,8 +8,9 @@ fpga/.Xil/
 
 # Ignore generated PLL_2019_2 temporary files (only these)
 # These are tool-generated simulation/netlist/stub artifacts for clk_pll
-/rtl/ip/PLL_2019_2/clk_pll_sim_netlist.v
-/rtl/ip/PLL_2019_2/clk_pll_sim_netlist.vhdl
-/rtl/ip/PLL_2019_2/clk_pll_stub.v
-/rtl/ip/PLL_2019_2/clk_pll_stub.vhdl
-/rtl/ip/PLL_2019_2/clk_pll.dcp
+rtl/ip/PLL_2019_2/clk_pll_sim_netlist.v
+rtl/ip/PLL_2019_2/clk_pll_sim_netlist.vhdl
+rtl/ip/PLL_2019_2/clk_pll_stub.v
+rtl/ip/PLL_2019_2/clk_pll_stub.vhdl
+rtl/ip/PLL_2019_2/clk_pll.dcp
+
