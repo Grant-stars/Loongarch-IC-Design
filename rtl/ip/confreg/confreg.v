@@ -213,20 +213,53 @@ assign s_bid   = buf_id;
 assign s_bresp = 2'b0;
 assign s_rresp = 2'b0;
 
+//寄存器输入
+always@(posedge aclk) 
+begin
+    if(~aresetn) begin
+        confreg_int_en   <= 32'd0;
+        confreg_int_edge <= 32'd0;
+        confreg_int_pol  <= 32'd0;
+        confreg_int_clr  <= 32'd0;
+        confreg_int_set  <= 32'd0;
+    end
+    else begin
+        //en、edge、pol 保持写入的值
+        if (w_enter) 
+        begin
+            case(buf_addr[15:0])
+                `CONFREG_INT_ADDR + 16'h0:  confreg_int_en   <= s_wdata;
+                `CONFREG_INT_ADDR + 16'h4:  confreg_int_edge <= s_wdata;
+                `CONFREG_INT_ADDR + 16'h8:  confreg_int_pol  <= s_wdata;
+                `CONFREG_INT_ADDR + 16'hc:  confreg_int_clr  <= s_wdata;
+                `CONFREG_INT_ADDR + 16'h10: confreg_int_set  <= s_wdata;
+                default: ;
+            endcase
+        end
+        else 
+        begin
+            //关键：clr 和 set 在非写周期自动清零
+            confreg_int_clr <= 32'd0;
+            confreg_int_set <= 32'd0;
+        end
+    end
+end
 
 //-------------------------------{touch_btn}begin----------------------------//
-assign touch_btn_data = touch_btn;
+//assign touch_btn_data = touch_btn;
 
-    // genvar i;
-    // generate for(i=0;i<4;i=i+1) begin: generate_btn_debounce
-    //     key_debounce u_key_debounce(
-    //         .sys_clk(aclk),
-    //         .key(touch_btn[i]),
-    //         .key_out(touch_btn_data[i])
-    //     );
-    // end
-    // endgenerate
-
+genvar i;
+generate for(i=0;i<4;i=i+1) begin: generate_btn_debounce
+    key_debounce #(
+        .SIMULATION(SIMULATION)   // 传递 SIMULATION 参数
+    ) u_key_debounce(
+        .sys_clk (aclk),
+        .resetn  (aresetn),      // 添加复位连接
+        .key     (touch_btn[i]),
+        .key_out (touch_btn_data[i])
+    );
+end
+endgenerate
 
 
 
@@ -240,10 +273,12 @@ wire write_timer_en  = w_enter & (buf_addr[15:0]==`TIMER_ADDR+16'h8);
 
 always @(posedge aclk) begin
     if(!aresetn) begin
-        sys_timer_cmp <= 32'h0;
+        // 仿真时给一个小值，上板时保持 0
+        sys_timer_cmp <= SIMULATION ? 32'd1000 : 32'h0;
     end
     else if (write_timer_cmp) begin
-        sys_timer_cmp <= s_wdata;
+        // 仿真时忽略软件写入，强制保持小值
+        sys_timer_cmp <= SIMULATION ? 32'd1000 : s_wdata;
     end
 end
 
@@ -351,7 +386,34 @@ end
 
 //-------------------------------{int_ctrl}begin----------------------------//
 //add your code
+int_ctrl u_int_ctrl(
+    .clk          (aclk),
+    .resetn       (aresetn),
 
+    .int_en       (confreg_int_en[31:0]),
+    .int_edge     (confreg_int_edge[31:0]),
+    .int_pol      (confreg_int_pol[31:0]),
+    .int_clr      (confreg_int_clr[31:0]),
+    .int_set      (confreg_int_set[31:0]),
+    .int_out      (confreg_int_state[31:0]),
+
+    .int_in       ({27'b0, timer_int, touch_btn_data})
+);
+
+//延迟拍打
+reg confreg_int_sync0, confreg_int_sync1;
+always @(posedge aclk or negedge aresetn) 
+begin
+    if (!aresetn) begin
+        confreg_int_sync0 <= 1'b0;
+        confreg_int_sync1 <= 1'b0;
+    end 
+    else begin
+        confreg_int_sync0 <= u_int_ctrl.out_hwio;
+        confreg_int_sync1 <= confreg_int_sync0;
+    end
+end
+assign confreg_int = confreg_int_sync1;
 //--------------------------------{int_ctrl}end-----------------------------//
 
 endmodule

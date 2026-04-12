@@ -523,17 +523,17 @@ wire [1 :0] dvi_bresp  ;
 wire        dvi_bvalid ;
 wire        dvi_bready ;
 
-assign dvi_arready  = 1'b1;
-assign dvi_rid      = 5'b0;
-assign dvi_rdata    = 32'b0;
-assign dvi_rresp    = 2'b0;
-assign dvi_rlast    = 1'b0;
-assign dvi_rvalid   = 1'b0;
-assign dvi_awready  = 1'b1;
-assign dvi_wready   = 1'b1;
-assign dvi_bid      = 5'b0;
-assign dvi_bresp    = 2'b0;
-assign dvi_bvalid   = 1'b0;
+// assign dvi_arready  = 1'b1;
+// assign dvi_rid      = 5'b0;
+// assign dvi_rdata    = 32'b0;
+// assign dvi_rresp    = 2'b0;
+// assign dvi_rlast    = 1'b0;
+// assign dvi_rvalid   = 1'b0;
+// assign dvi_awready  = 1'b1;
+// assign dvi_wready   = 1'b1;
+// assign dvi_bid      = 5'b0;
+// assign dvi_bresp    = 2'b0;
+// assign dvi_bvalid   = 1'b0;
 
 //axi confreg
 wire [4 :0] confreg_arid   ;
@@ -1107,7 +1107,7 @@ AxiCrossbar_2x8  u_AxiCrossbar_2x8 (
 
 //OpenLA500 CPU core
 core_top u_cpu(
-    .intrpt    (8'h0        ),  // 实验一不用中断，直接给0
+    .intrpt    ({7'h0,confreg_int_to_cpu}),  // 实验一不用中断，直接给0
     .aclk      (cpu_clk     ),  // CPU时钟：33MHz
     .aresetn   (cpu_resetn  ),  // CPU复位：低有效
 
@@ -1445,16 +1445,64 @@ confreg #(
     .s_rready    (confreg_rready),
 
     // 外设接口（可根据实际板子连接）
-    .led              (),
-    .dpy0             (),
-    .dpy1             (),
-    .switch           (32'd0),
-    .touch_btn        (4'd0),
+    .led              (leds),
+    .dpy0             (dpy0),
+    .dpy1             (dpy1),
+    .switch           (dip_sw),
+    .touch_btn        (touch_btn),
     .dma_finish       (1'b0),
     .fft_finish       (1'b0),
-    .confreg_int      ()
+    .confreg_int      (confreg_int_to_cpu)
 );
 
+//DVI
+ axi_dvi u_axi_dvi (
+    .s_awvalid        (dvi_awvalid ),
+    .s_awaddr         (dvi_awaddr ),
+    .s_awid           (dvi_awid ),
+    .s_awlen          (dvi_awlen ),
+    .s_awsize         (dvi_awsize ),
+    .s_awburst        (dvi_awburst ),
+    .s_awlock         (dvi_awlock ),
+    .s_awcache        (dvi_awcache ),
+    .s_awprot         (dvi_awprot ),
+    .s_wvalid         (dvi_wvalid ),
+    .s_wdata          (dvi_wdata ),
+    .s_wstrb          (dvi_wstrb ),
+    .s_wlast          (dvi_wlast ),
+    .s_bready         (dvi_bready ),
+    .s_arvalid        (dvi_arvalid ),
+    .s_araddr         (dvi_araddr ),
+    .s_arid           (dvi_arid ),
+    .s_arlen          (dvi_arlen ),
+    .s_arsize         (dvi_arsize ),
+    .s_arburst        (dvi_arburst ),
+    .s_arlock         (dvi_arlock ),
+    .s_arcache        (dvi_arcache ),
+    .s_arprot         (dvi_arprot ),
+    .s_rready         (dvi_rready ),
+    .aclk             (sys_clk ),
+    .aresetn          (sys_resetn ),
+
+    .s_awready        (dvi_awready ),
+    .s_wready         (dvi_wready ),
+    .s_bvalid         (dvi_bvalid ),
+    .s_bid            (dvi_bid ),
+    .s_bresp          (dvi_bresp ),
+    .s_arready        (dvi_arready ),
+    .s_rvalid         (dvi_rvalid ),
+    .s_rdata          (dvi_rdata ),
+    .s_rid            (dvi_rid ),
+    .s_rresp          (dvi_rresp ),
+    .s_rlast          (dvi_rlast ),
+    .video_clk        (video_clk ),
+    .hsync            (video_hsync ),
+    .vsync            (video_vsync ),
+    .data_enable      (video_de ),
+    .video_red        (video_red ),
+    .video_green      (video_green ),
+    .video_blue       (video_blue )
+);
 
 endmodule
 
