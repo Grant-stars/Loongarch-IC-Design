@@ -16,3 +16,6 @@ rtl/ip/PLL_2019_2/clk_pll.dcp
 
 bitstream/
 rtl/ip/PLL_2019_2/clk_pll.xci
+
+# 笔记文件
+note.md
