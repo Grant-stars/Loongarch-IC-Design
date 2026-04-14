@@ -36,15 +36,6 @@ module key_debounce #(parameter SIMULATION=1'b0)
         end
     end
 
-    // always @(posedge sys_clk ) begin
-    //     if(SIMULATION)begin
-    //         key_out = key;
-    //     end
-    //     else begin
-    //         key_out = key & key_value ;
-    //     end
-    // end
-
     assign key_out = SIMULATION ? ~key_value : (key & key_value) ; //在仿真模式下直接输出按键状态，否则输出消抖后的按键状态
 
 endmodule
