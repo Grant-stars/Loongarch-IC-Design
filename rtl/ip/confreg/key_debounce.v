@@ -1,63 +1,50 @@
 module key_debounce #(parameter SIMULATION=1'b0)
 (
-    input           sys_clk,      // 外部时钟
-    input           resetn,       // 复位信号，低有效
-    input           key,          // 外部按键输入
-    output reg      key_out       // 按键消抖后的数据
+    input sys_clk, //外部时钟20M
+
+    input key, //外部按键输入
+
+    output wire key_out //按键消抖后的数据
 );
 
-    // 参数定义
-    localparam DEBOUNCE_CNT = SIMULATION?32'd4000:32'd400000;  // 消抖时间（根据时钟频率调整）
-    
-    // 寄存器定义
-    reg [31:0] delay_cnt;
-    reg        key_reg;
-    reg        key_state;
-    
-    // 同步和边沿检测
-    always @(posedge sys_clk or negedge resetn) begin
-        if (!resetn) begin
-            key_reg <= 1'b0;     
-            delay_cnt <= 32'd0;
-        end
-        else begin
-            key_reg <= key;
-            
-            // 按键状态变化时重新装载计数器
-            if (key_reg != key) begin
-                delay_cnt <= DEBOUNCE_CNT;
-                
-            end
-            // 按键状态稳定时递减计数器
-            else if (delay_cnt > 32'd0) begin
+    //reg define
+    reg [31:0] delay_cnt; //延时计数
+    reg key_reg;
+    reg key_value = 1'b1;
+
+//*****************************************************
+//** main code
+//*****************************************************
+    always @(posedge sys_clk ) begin
+        key_reg <= key;
+        if(key_reg != key) //一旦检测到按键状态发生变化(有按键被按下或释放)
+            delay_cnt <= SIMULATION ? 32'd4000 : 32'd400000; //给延时计数器重新装载初始值（计数时间为 20ms）
+        else if(key_reg == key) begin //在按键状态稳定时，计数器递减，开始 20ms 倒计时
+            if(delay_cnt > 32'd0)
                 delay_cnt <= delay_cnt - 1'b1;
-            end
+            else
+                delay_cnt <= delay_cnt;
         end
     end
-    
-    // 按键状态更新
-    always @(posedge sys_clk or negedge resetn) begin
-        if (!resetn) begin
-            key_state <= 1'b1;    
+
+    always @(posedge sys_clk ) begin
+        if(delay_cnt == 32'd1) begin //当计数器递减到 1 时，说明按键稳定状态维持了 20ms
+            key_value <= key; //并寄存此时按键的值
         end
-        else if (delay_cnt == 32'd1) begin
-            key_state <= key;     // 消抖完成，更新按键状态
-        end
-        else if(key_out) begin
-            key_state <= 1'b1; // 重置状态以等待下一次按键事件
+        else if (key_out) begin
+            key_value <= 1'b1;
         end
     end
-    
-    // 输出（按下时为 1，释放时为 0）
-    always @(posedge sys_clk or negedge resetn) begin
-        if (!resetn) begin
-            key_out <= 1'b0;
-        end
-        else begin
-            //key_out <= ~key_state & key;  // 检测下降沿（按下时输出一个脉冲）
-            // 或者如果希望输出跟随按键状态：
-            key_out <= ~key_state;
-        end
-    end
+
+    // always @(posedge sys_clk ) begin
+    //     if(SIMULATION)begin
+    //         key_out = key;
+    //     end
+    //     else begin
+    //         key_out = key & key_value ;
+    //     end
+    // end
+
+    assign key_out = SIMULATION ? ~key_value : (key & key_value) ; //在仿真模式下直接输出按键状态，否则输出消抖后的按键状态
 
 endmodule

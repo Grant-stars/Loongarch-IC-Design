@@ -254,7 +254,6 @@ generate for(i=0;i<4;i=i+1) begin: generate_btn_debounce
         .SIMULATION(SIMULATION)   // 传递 SIMULATION 参数
     ) u_key_debounce(
         .sys_clk (aclk),
-        .resetn  (aresetn),      // 添加复位连接
         .key     (touch_btn[i]),
         .key_out (touch_btn_data[i])
     );
