@@ -1,4 +1,5 @@
-module key_debounce(
+module key_debounce #(parameter SIMULATION=1'b0)
+(
     input sys_clk, //外部时钟20M
 
     input key, //外部按键输入
@@ -17,7 +18,7 @@ module key_debounce(
     always @(posedge sys_clk ) begin
         key_reg <= key;
         if(key_reg != key) //一旦检测到按键状态发生变化(有按键被按下或释放)
-            delay_cnt <= 32'd400000; //给延时计数器重新装载初始值（计数时间为 20ms）
+            delay_cnt <= SIMULATION ? 32'd4000 : 32'd400000; //给延时计数器重新装载初始值（计数时间为 20ms）
         else if(key_reg == key) begin //在按键状态稳定时，计数器递减，开始 20ms 倒计时
             if(delay_cnt > 32'd0)
                 delay_cnt <= delay_cnt - 1'b1;
@@ -30,11 +31,11 @@ module key_debounce(
         if(delay_cnt == 32'd1) begin //当计数器递减到 1 时，说明按键稳定状态维持了 20ms
             key_value <= key; //并寄存此时按键的值
         end
-        else begin
-            key_value <= key_out;
+        else if (key_out) begin
+            key_value <= 1'b1;
         end
     end
 
-    assign key_out = key & key_value ;
+    assign key_out = SIMULATION ? ~key_value : (key & key_value) ; //在仿真模式下直接输出按键状态，否则输出消抖后的按键状态
 
 endmodule
