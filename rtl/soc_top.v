@@ -359,32 +359,7 @@ wire [1 :0] dma_m_bresp  ;
 wire        dma_m_bvalid ;
 wire        dma_m_bready ;
 
-assign dma_m_arid       = 4'b0  ;
-assign dma_m_araddr     = 32'h0;
-assign dma_m_arlen      = 8'b0  ;
-assign dma_m_arsize     = 3'b0 ;
-assign dma_m_arburst    = 2'b0;
-assign dma_m_arlock     = 1'b0;
-assign dma_m_arcache    = 4'b0;
-assign dma_m_arprot     = 3'b0;
-assign dma_m_arvalid    = 1'b0;
-assign dma_m_rready     = 1'b1;
-assign dma_m_awid       = 4'b0;
-assign dma_m_awaddr     = 32'b0;
-assign dma_m_awlen      = 8'b0;
-assign dma_m_awsize     = 3'b0;
-assign dma_m_awburst    = 2'b0;
-assign dma_m_awlock     = 1'b0;
-assign dma_m_awcache    = 4'b0;
-assign dma_m_awprot     = 3'b0;
-assign dma_m_awvalid    = 1'b1;
-assign dma_m_wid        = 4'b0;
-assign dma_m_wdata      = 32'b0;
-assign dma_m_wstrb      = 4'b0;
-assign dma_m_wlast      = 1'b0;
-assign dma_m_wvalid     = 1'b0;
-assign dma_m_bready     = 1'b1;
-
+//dma slave axi
 wire [4 :0] dma_s_arid   ;
 wire [31:0] dma_s_araddr ;
 wire [7 :0] dma_s_arlen  ;
@@ -422,17 +397,8 @@ wire        dma_s_bvalid ;
 wire        dma_s_bready ;
 wire        dma_finish   ;
 
-assign dma_s_arready    = 1'b1;
-assign dma_s_rid        = 5'b0;
-assign dma_s_rdata      = 32'b0;
-assign dma_s_rresp      = 2'b0;
-assign dma_s_rlast      = 1'b0;
-assign dma_s_rvalid     = 1'b0;
-assign dma_s_awready    = 1'b1;
-assign dma_s_wready     = 1'b1;
-assign dma_s_bid        = 5'b0;
-assign dma_s_bresp      = 2'b0;
-assign dma_s_bvalid     = 1'b0;
+//dma中断信号
+wire dma_intr;
 
 // reserved
 wire [4 :0] axiOut_1_arid   ;
@@ -1450,7 +1416,7 @@ confreg #(
     .dpy1             (dpy1),
     .switch           (dip_sw),
     .touch_btn        (touch_btn),
-    .dma_finish       (1'b0),
+    .dma_finish       (dma_intr),
     .fft_finish       (1'b0),
     .confreg_int      (confreg_int_to_cpu)
 );
@@ -1503,6 +1469,98 @@ confreg #(
     .video_green      (video_green ),
     .video_blue       (video_blue )
 );
+
+//DMA
+dma u_dma(
+    .aclk             ( sys_clk       ),
+    .aresetn          ( sys_resetn    ),
+
+    //master 1
+    //aw
+    .m_awvalid        ( dma_m_awvalid       ),   
+    .m_awready        ( dma_m_awready       ),
+    .m_awaddr         ( dma_m_awaddr        ),
+    .m_awid           ( dma_m_awid          ), 
+    .m_awlen          ( dma_m_awlen         ),
+    .m_awsize         ( dma_m_awsize        ),
+    .m_awburst        ( dma_m_awburst       ),
+    .m_awlock         ( dma_m_awlock        ),
+    .m_awcache        ( dma_m_awcache       ),
+    .m_awprot         ( dma_m_awprot        ),
+    //w
+    .m_wvalid         ( dma_m_wvalid        ),
+    .m_wready         ( dma_m_wready        ),
+    .m_wdata          ( dma_m_wdata         ),
+    .m_wstrb          ( dma_m_wstrb         ),
+    .m_wlast          ( dma_m_wlast         ),
+    //b
+    .m_bready         ( dma_m_bready        ),
+    .m_bvalid         ( dma_m_bvalid        ),
+    .m_bid            ( dma_m_bid           ),
+    .m_bresp          ( dma_m_bresp         ),
+    //ar
+    .m_arvalid        ( dma_m_arvalid       ),
+    .m_arready        ( dma_m_arready       ),
+    .m_araddr         ( dma_m_araddr        ),
+    .m_arid           ( dma_m_arid          ),  
+    .m_arlen          ( dma_m_arlen         ),
+    .m_arsize         ( dma_m_arsize        ),
+    .m_arburst        ( dma_m_arburst       ),
+    .m_arlock         ( dma_m_arlock        ),
+    .m_arcache        ( dma_m_arcache       ),
+    .m_arprot         ( dma_m_arprot        ),
+    //r
+    .m_rvalid         ( dma_m_rvalid        ),
+    .m_rready         ( dma_m_rready        ),
+    .m_rdata          ( dma_m_rdata         ),
+    .m_rid            ( dma_m_rid           ), 
+    .m_rresp          ( dma_m_rresp         ),
+    .m_rlast          ( dma_m_rlast         ),
+
+    //slave 5
+    //aw
+    .s_awvalid         ( dma_s_awvalid      ),
+    .s_awready         ( dma_s_awready      ),
+    .s_awaddr          ( dma_s_awaddr       ),
+    .s_awid            ( dma_s_awid         ),  
+    .s_awlen           ( dma_s_awlen        ),
+    .s_awsize          ( dma_s_awsize       ),
+    .s_awburst         ( dma_s_awburst      ),
+    .s_awlock          ( dma_s_awlock       ),
+    .s_awcache         ( dma_s_awcache      ),
+    .s_awprot          ( dma_s_awprot       ),
+    //w
+    .s_wvalid          ( dma_s_wvalid       ),
+    .s_wready          ( dma_s_wready       ),
+    .s_wdata           ( dma_s_wdata        ),
+    .s_wstrb           ( dma_s_wstrb        ),
+    .s_wlast           ( dma_s_wlast        ),
+    //b
+    .s_bready          ( dma_s_bready       ),
+    .s_bvalid          ( dma_s_bvalid       ),
+    .s_bid             ( dma_s_bid          ),  
+    .s_bresp           ( dma_s_bresp        ),
+    //ar
+    .s_arvalid         ( dma_s_arvalid      ),
+    .s_arready         ( dma_s_arready      ),
+    .s_araddr          ( dma_s_araddr       ),
+    .s_arid            ( dma_s_arid         ),  
+    .s_arsize          ( dma_s_arsize       ),
+    .s_arburst         ( dma_s_arburst      ),
+    .s_arlock          ( dma_s_arlock       ),  
+    .s_arcache         ( dma_s_arcache      ),
+    .s_arprot          ( dma_s_arprot       ),
+    //r
+    .s_rvalid          ( dma_s_rvalid       ),
+    .s_rready          ( dma_s_rready       ),
+    .s_rdata           ( dma_s_rdata        ),
+    .s_rid             ( dma_s_rid          ),  
+    .s_rlast           ( dma_s_rlast        ),
+
+    //中断信号
+    .dma_intr          ( dma_intr           )       
+    );
+
 
 endmodule
 
