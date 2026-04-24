@@ -185,11 +185,6 @@ wire [31:0] rdata_d =   buf_addr[15:0] == (`CONFREG_INT_ADDR + 16'h0)     ? conf
                         buf_addr[15:0] == `LED_ADDR                       ? led_data              :
                         buf_addr[15:0] == `SWITCH_ADDR                    ? switch_data           :
                         buf_addr[15:0] == `SIMU_FLAG_ADDR                 ? simu_flag             :
-                        buf_addr[15:0] == (`DMA_ADDR + 16'h0)             ? dma_src               :
-                        buf_addr[15:0] == (`DMA_ADDR + 16'h4)             ? dma_dst               :
-                        buf_addr[15:0] == (`DMA_ADDR + 16'h8)             ? dma_len               :
-                        buf_addr[15:0] == (`DMA_ADDR + 16'hc)             ? dma_ctrl            :
-                        buf_addr[15:0] == (`DMA_ADDR + 16'h10)            ? dma_stat           :
                         32'd0;
 
 always@(posedge aclk)
@@ -421,35 +416,5 @@ end
 assign confreg_int = confreg_int_sync1;
 //--------------------------------{int_ctrl}end-----------------------------//
 
-
-//-------------------------------{dma}begin----------------------------//
-
-//配置使能信号：
-wire  write_dma_src  = w_enter & (buf_addr[15:0] == (`DMA_ADDR + 16'h0));
-wire  write_dma_dst  = w_enter & (buf_addr[15:0] == (`DMA_ADDR + 16'h4));
-wire  write_dma_len  = w_enter & (buf_addr[15:0] == (`DMA_ADDR + 16'h8));
-wire  write_dma_ctrl = w_enter & (buf_addr[15:0] == (`DMA_ADDR + 16'hc));
-
-//添加写逻辑
-always @(posedge aclk)begin                                        
-    if(!aresetn) begin
-        dma_src <= 32'd0;
-        dma_dst <= 32'd0;
-        dma_len <= 32'd0;
-        dma_ctrl <= 32'd0;
-    end
-    else begin
-        if(write_dma_src)   dma_src <= s_wdata;
-        if(write_dma_dst)   dma_dst <= s_wdata;
-        if(write_dma_len)   dma_len <= s_wdata;
-        if(write_dma_ctrl)  dma_ctrl <= s_wdata;
-    end
-end                                          
-
-wire dma_intr;  // DMA中断信号，需要加到int_ctrl里
-
-//实例化dma模块
-
-//-------------------------------{dma}end----------------------------//
 
 endmodule
