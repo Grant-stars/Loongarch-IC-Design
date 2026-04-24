@@ -1,5 +1,4 @@
 //dma slave 地址为1f300000 – 1f0fffff
-`define DMA_BASE_ADDR  16'hf000
 `define SRC_ADDR       16'h0
 `define DST_ADDR       16'h4
 `define LEN_ADDR       16'h8
@@ -67,13 +66,13 @@ module dma(
     input  [2:0]    s_awprot,
     //w
     input           s_wvalid,
-    output reg         s_wready,
+    output reg      s_wready,
     input  [31:0]   s_wdata,
     input  [3:0]    s_wstrb,
     input           s_wlast,
     //b
     input           s_bready,
-    output reg         s_bvalid,
+    output reg      s_bvalid,
     output [4 :0]   s_bid,
     output [1:0]    s_bresp,
     //ar
