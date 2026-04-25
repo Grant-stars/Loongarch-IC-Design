@@ -291,14 +291,13 @@ assign m_awlock = 1'b0;
 assign m_awcache = 4'b0000;
 assign m_awprot = 3'b000;
 
-reg [2:0] stat;
-localparam IDLE = 3'd0;
-localparam AR = 3'd1;  
-localparam READ = 3'd2;
-localparam AW = 3'd3;
-localparam WRITE = 3'd4;
-localparam B = 3'd5;   
-localparam DONE = 3'd6;
+localparam IDLE = 32'd0;
+localparam AR = 32'd1;  
+localparam READ = 32'd2;
+localparam AW = 32'd3;
+localparam WRITE = 32'd4;
+localparam B = 32'd5;   
+localparam DONE = 32'd6;
 
 reg [31:0] count;  //已传输数据计数
 assign m_araddr = dma_src + count;
@@ -308,80 +307,80 @@ reg [31:0] rdata_buf;  //读数据缓存
 wire [31:0] wdata_d = rdata_buf;  //写数据缓存
 
 //读地址
-assign m_arvalid = (stat==AR)? 1'b1 : 1'b0;
+assign m_arvalid = (dma_stat==AR)? 1'b1 : 1'b0;
 wire m_ar_enter = m_arvalid & m_arready;  //读地址握手成功
 
 //读数据
-assign m_rready = (stat==READ)? 1'b1 : 1'b0;
+assign m_rready = (dma_stat==READ)? 1'b1 : 1'b0;
 wire m_r_enter = m_rvalid & m_rready;  //读数据握手成功
 
 //写地址
-assign m_awvalid = (stat==AW)? 1'b1 : 1'b0;
+assign m_awvalid = (dma_stat==AW)? 1'b1 : 1'b0;
 wire m_aw_enter = m_awvalid & m_awready;  //写地址握手
 
 //写数据
-assign m_wvalid = (stat==WRITE)? 1'b1 : 1'b0;
+assign m_wvalid = (dma_stat==WRITE)? 1'b1 : 1'b0;
 assign m_wdata = wdata_d;
 assign m_wstrb = 4'b1111;  //全字节写使能
 assign m_wlast = 1'b1;  //单数据传输，此处wlast始终为1
 wire m_w_enter = m_wvalid & m_wready & m_wlast;  //写数据握手成功
 
 //写响应
-assign m_bready = (stat==B)? 1'b1 : 1'b0;
+assign m_bready = (dma_stat==B)? 1'b1 : 1'b0;
 wire m_b_enter = m_bvalid & m_bready;  //写响应握手成功
 
 always@(posedge aclk)begin
     if(!aresetn) begin
-        stat <= IDLE;
+        dma_stat <= IDLE;
         count <= 32'b0;
         rdata_buf <= 32'b0;
     end
     else begin
-        case(stat)
+        case(dma_stat)
             IDLE: begin
-                if(dma_ctrl[0]) stat <= AR;  //当ctrl启动位被设置时，进入读地址状态
+                if(dma_ctrl[0]) dma_stat <= AR;  //当ctrl启动位被设置时，进入读地址状态
             end
 
             AR: begin
-                if(m_ar_enter) stat <= READ;  //读地址握手成功，进入读数据状态
+                if(m_ar_enter) dma_stat <= READ;  //读地址握手成功，进入读数据状态
             end
 
             READ: begin
                 if(m_r_enter)  rdata_buf <= m_rdata;
-                if(m_r_enter & m_rlast) stat <= AW;  //读到最后一个数据时读状态结束
+                if(m_r_enter & m_rlast) dma_stat <= AW;  //读到最后一个数据时读状态结束
             end
 
             AW: begin
-                if(m_aw_enter) stat <= WRITE;  //写地址握手成功，进入写数据状态
+                if(m_aw_enter) dma_stat <= WRITE;  //写地址握手成功，进入写数据状态
             end
 
             WRITE: begin
-                if(m_w_enter) stat <= B;  //写数据握手成功，进入写响应状态
+                if(m_w_enter) dma_stat <= B;  //写数据握手成功，进入写响应状态
             end
 
             B: begin
                 if(m_b_enter) begin
                     if(count + 4 < dma_len) begin  //如果未传输完所有数据，继续传输
                         count <= count + 4;
-                        stat <= AR;  //回到读地址状态，进行下一次传输
+                        dma_stat <= AR;  //回到读地址状态，进行下一次传输
                     end
                     else begin  //传输完成
                         count <= 0;
-                        stat <= DONE;  //进入完成状态
+                        dma_stat <= DONE;  //进入完成状态
                     end
                 end
             end
 
             DONE: begin
                 //在完成状态下，等待软件清除ctrl启动位
-                if(!dma_ctrl[0]) stat <= IDLE;  //当ctrl启动位被清除时，回到空闲状态
+                if(!dma_ctrl[0])   dma_stat <= IDLE;  //当ctrl启动位被清除时，回到空闲状态
             end
 
-            default: stat <= IDLE;
+            default: dma_stat <= IDLE;
         endcase
     end
 end
 
-assign dma_intr = (stat==DONE) ? 1'b1 : 1'b0;  //当进入完成状态时，dma_intr拉高触发中断
+assign dma_intr = (dma_stat==DONE) ? 1'b1 : 1'b0;  //当进入完成状态时，dma_intr拉高触发中断
 
 endmodule
