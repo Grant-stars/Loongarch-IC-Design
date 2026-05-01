@@ -107,6 +107,9 @@ reg [31:0] sys_timer,sys_timer_cmp;
 reg sys_timer_en;
 reg timer_int;//定时器中断信号，高电平触发
 
+reg [31:0] exec_time;   //计时寄存器（50MHz下约86秒计满重回0）
+reg exec_time_en; //计时使能
+
 reg [31:0] digital_ctrl;
 reg [31:0] digital_data;
 
@@ -180,6 +183,8 @@ wire [31:0] rdata_d =   buf_addr[15:0] == (`CONFREG_INT_ADDR + 16'h0)     ? conf
                         buf_addr[15:0] == (`TIMER_ADDR + 16'h0)           ? sys_timer             : 
                         buf_addr[15:0] == (`TIMER_ADDR + 16'h4)           ? sys_timer_cmp         :
                         buf_addr[15:0] == (`TIMER_ADDR + 16'h8)           ? sys_timer_en          :
+                        buf_addr[15:0] == (`TIMER_ADDR + 16'hc)           ? exec_time             :
+                        buf_addr[15:0] == (`TIMER_ADDR + 16'h10)          ? {31'd0, exec_time_en} :
                         buf_addr[15:0] == (`DIGITAL_ADDR + 16'h0)         ? digital_ctrl          :
                         buf_addr[15:0] == (`DIGITAL_ADDR + 16'h4)         ? digital_data          :
                         buf_addr[15:0] == `LED_ADDR                       ? led_data              :
@@ -271,6 +276,8 @@ endgenerate
 wire write_timer_cmp = w_enter & (buf_addr[15:0]==`TIMER_ADDR+16'h4);
 wire write_timer_en  = w_enter & (buf_addr[15:0]==`TIMER_ADDR+16'h8);
 
+wire write_exec_time_en  = w_enter & (buf_addr[15:0]==`TIMER_ADDR+16'h10);
+
 always @(posedge aclk) begin
     if(!aresetn) begin
         // 仿真时给一个小值，上板时保持 0
@@ -309,6 +316,26 @@ always @(posedge aclk or negedge aresetn) begin
         timer_int <= 1'b0;
     end
 end
+
+//计时使能信号为1时开始计时，否则清零
+always @(posedge aclk or negedge aresetn) begin
+    if(!aresetn) begin
+        exec_time <= 32'h0;
+        exec_time_en <= 1'b0;
+    end
+    else begin
+        if(write_exec_time_en) begin
+            exec_time_en <= s_wdata[0];
+        end
+        if(exec_time_en) begin
+            exec_time <= exec_time + 1'b1;
+        end
+        else begin
+            exec_time <= 32'h0;
+        end
+    end
+end
+
 //--------------------------------{timer}end-----------------------------//
 
 //--------------------------------{led}begin-----------------------------//
