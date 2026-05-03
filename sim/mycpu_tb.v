@@ -82,6 +82,9 @@ initial begin
 end
 always #10 clk=~clk;
 
+//dma仿真不需要按键
+
+/*
 //产生按键信号
 initial begin
     touch_btn = 4'h0;
@@ -110,6 +113,7 @@ initial begin
     touch_btn = 4'b0000;
 
 end
+*/
 
 soc_top  #(.SIMULATION(1'b1)) u_soc_top (
     .clk                     ( clk           ),
